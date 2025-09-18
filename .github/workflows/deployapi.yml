@@ -42,7 +42,7 @@ jobs:
           path: MunsonPickles.Api.zip
 
   deployOnDev:
-    runs-on: runner1
+    runs-on: windows-latest
     needs: build
     # if: github.base_ref == 'develop' || startsWith(github.ref, 'refs/heads/feature/*')
     steps:
@@ -52,28 +52,15 @@ jobs:
         name: MunsonPickles.Api
         path: MunsonPickles.Api
 
-    - name: Install sshpass
-      run: sudo apt-get update && sudo apt-get install -y sshpass
-
-    - name: Deploy to IIS via SSH
-      env:
-          IIS_HOST: ${{ secrets.IIS_HOST }}
-          IIS_USER: ${{ secrets.IIS_USER }}
-          IIS_PASSWORD: ${{ secrets.IIS_PASSWORD }}
-          SITE_PATH: ${{ secrets.SITE_PATH }}
-          APP_POOL: ${{ secrets.APP_POOL }}
+    - name: Deploy using MSDeploy
       run: |
-          # Copy zip to IIS server
-          sshpass -p "$IIS_PASSWORD" scp ./MunsonPickles.Api/MunsonPickles.Api.zip $IIS_USER@$IIS_HOST:C:/temp/MunsonPickles.Api.zip
+          $msdeploy = "C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe"
 
-          # Deploy remotely
-          sshpass -p "$IIS_PASSWORD" ssh $IIS_USER@$IIS_HOST powershell -Command "
-            if (Test-Path $env:SITE_PATH) { Remove-Item -Recurse -Force $env:SITE_PATH }
-            New-Item -ItemType Directory -Force -Path $env:SITE_PATH
-            Expand-Archive -Path C:\temp\MunsonPickles.Api.zip -DestinationPath $env:SITE_PATH -Force
-            Import-Module WebAdministration
-            Restart-WebAppPool -Name $env:APP_POOL
-          "
+          & $msdeploy -verb:sync `
+            -source:package=".\MunsonPickles.Api\MunsonPickles.Api.zip" `
+            -dest:auto,computerName="https://${{ secrets.IIS_HOST }}:8172/msdeploy.axd?site=MunsonPickles.Api",userName="${{ secrets.IIS_USER }}",password="${{ secrets.IIS_PASS }}",authType="Basic" `
+            -allowUntrusted
+
 
     # - name: Install Azure CLI
     #   run: |

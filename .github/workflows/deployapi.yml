@@ -42,7 +42,7 @@ jobs:
           path: MunsonPickles.Api.zip
 
   deployOnDev:
-    runs-on: ubuntu-latest
+    runs-on: runner1
     needs: build
     # if: github.base_ref == 'develop' || startsWith(github.ref, 'refs/heads/feature/*')
     steps:

@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: "app-munson-api-eastus-dev-001"
+  # AZURE_WEBAPP_NAME: "app-munson-api-eastus-dev-001"
+  ArtifactName: "TEST"
 
 jobs:
   build:
@@ -27,11 +28,25 @@ jobs:
       # publish
       - name: Publish
         run: dotnet publish ./MunsonPickles.Api/MunsonPickles.Api.csproj --configuration Release --output ./publish
-
-      # deploy to azure
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
+        
+      - name: Zip Publish Artifact
+        run: |
+            mkdir -p ${{ github.workspace }}/${{ env.ArtifactName }}
+            cd ${{ github.workspace }}/temp/publish
+            zip -r ${{ github.workspace }}/${{ env.ArtifactName }}/publish.zip .
+  
+        # Upload artifact to GitHub
+  
+      - name: Upload OneProfile Artifact
+        uses: actions/upload-artifact@v4
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.API_PUBLISH_SECRET }}
-          package: ./publish
+          name: Artifacts
+          path: ${{ github.workspace }}/${{ env.ArtifactName }}
+          
+      # deploy to azure
+      # - name: Deploy to Azure Web App
+      #   uses: azure/webapps-deploy@v2
+      #   with:
+      #     app-name: ${{ env.AZURE_WEBAPP_NAME }}
+      #     publish-profile: ${{ secrets.API_PUBLISH_SECRET }}
+      #     package: ./publish

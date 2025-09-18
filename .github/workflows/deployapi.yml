@@ -58,25 +58,24 @@ jobs:
     - name: Deploy to IIS via WinRM
       shell: pwsh
       run: |
-          # Import module (install PSRemoting tools if not present)
-          Install-Module -Name PSWSMan -Force -Scope CurrentUser
-          Install-Module -Name Posh-SSH -Force -Scope CurrentUser
-          
-          $user = "${{ secrets.IIS_USERNAME }}"
-          $pass = ConvertTo-SecureString "${{ secrets.IIS_PASSWORD }}" -AsPlainText -Force
-          $cred = New-Object System.Management.Automation.PSCredential($user, $pass)
-          $iisServer = "Testvm"
-          $zipPath = "MunsonPickles.Api\MunsonPickles.Api.zip"
-          $driveName = "Z"
-          
-          # Map drive
-          New-PSDrive -Name $driveName -PSProvider FileSystem -Root "\\$iisServer\c$" -Credential $cred -Persist
-          
-          # Copy file
-          Copy-Item $zipPath "$driveName\temp\" -Force
-          
-          # Clean up
-          Remove-PSDrive -Name $driveName
+        # On Linux runner (pwsh)
+        $user = "${{ secrets.IIS_USERNAME }}"
+        $pass = ConvertTo-SecureString "${{ secrets.IIS_PASSWORD }}" -AsPlainText -Force
+        $cred = New-Object System.Management.Automation.PSCredential($user, $pass)
+        $iisServer = "Testvm"
+        $session = New-PSSession -ComputerName $iisServer -Credential $cred
+        
+        # Copy artifact
+        Copy-Item ./artifact/MunsonPickles.Api.zip "C:\temp\MunsonPickles.Api.zip" -ToSession $session -Force
+        
+        # Extract and deploy
+        Invoke-Command -Session $session -ScriptBlock {
+            Expand-Archive -Path "C:\temp\MunsonPickles.Api.zip" -DestinationPath "C:\inetpub\wwwroot\MunsonPickles.Api" -Force
+            iisreset
+        }
+        
+        Remove-PSSession $session
+
 
     # - name: Install Azure CLI
     #   run: |

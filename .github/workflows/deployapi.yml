@@ -61,24 +61,22 @@ jobs:
           # Import module (install PSRemoting tools if not present)
           Install-Module -Name PSWSMan -Force -Scope CurrentUser
           Install-Module -Name Posh-SSH -Force -Scope CurrentUser
-
+          
           $user = "${{ secrets.IIS_USERNAME }}"
           $pass = ConvertTo-SecureString "${{ secrets.IIS_PASSWORD }}" -AsPlainText -Force
           $cred = New-Object System.Management.Automation.PSCredential($user, $pass)
-
-          # Define paths
-          $iisServer = "${{ secrets.IIS_HOST }}"
-          $remotePath = "C:\inetpub\wwwroot\MunsonPickles.Api"
-          $zipPath = "MunsonPickles.Api/MunsonPickles.Api.zip"
-
-          # Copy artifact to IIS server
-          Copy-Item $zipPath "\\$iisServer\c$\temp\" -Credential $cred
-
-          # Remote unzip and deploy
-          Invoke-Command -ComputerName $iisServer -Credential $cred -ScriptBlock {
-              Expand-Archive -Path "C:\temp\MunsonPickles.Api.zip" -DestinationPath $using:remotePath -Force
-              iisreset
-          }
+          $iisServer = Testvm
+          $zipPath = "MunsonPickles.Api\MunsonPickles.Api.zip"
+          $driveName = "Z"
+          
+          # Map drive
+          New-PSDrive -Name $driveName -PSProvider FileSystem -Root "\\$iisServer\c$" -Credential $cred -Persist
+          
+          # Copy file
+          Copy-Item $zipPath "$driveName\temp\" -Force
+          
+          # Clean up
+          Remove-PSDrive -Name $driveName
 
     # - name: Install Azure CLI
     #   run: |

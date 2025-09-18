@@ -65,7 +65,7 @@ jobs:
           $user = "${{ secrets.IIS_USERNAME }}"
           $pass = ConvertTo-SecureString "${{ secrets.IIS_PASSWORD }}" -AsPlainText -Force
           $cred = New-Object System.Management.Automation.PSCredential($user, $pass)
-          $iisServer = Testvm
+          $iisServer = "Testvm"
           $zipPath = "MunsonPickles.Api\MunsonPickles.Api.zip"
           $driveName = "Z"
           

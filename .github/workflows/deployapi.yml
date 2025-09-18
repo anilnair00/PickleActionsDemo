@@ -52,6 +52,9 @@ jobs:
         name: MunsonPickles.Api
         path: MunsonPickles.Api
 
+    - name: Install sshpass
+      run: sudo apt-get update && sudo apt-get install -y sshpass
+
     - name: Deploy to IIS via SSH
       env:
           IIS_HOST: ${{ secrets.IIS_HOST }}

@@ -40,7 +40,22 @@ jobs:
         with:
           name: MunsonPickles.Api
           path: MunsonPickles.Api.zip
-          
+
+  deployOnDev:
+    runs-on: windows-latest
+    needs: build
+    # if: github.base_ref == 'develop' || startsWith(github.ref, 'refs/heads/feature/*')
+    steps:
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4.0.0
+      with:
+        name: MunsonPickles.Api
+        path: MunsonPickles.Api
+
+    # - name: Install Azure CLI
+    #   run: |
+    #     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash 
+        
       # deploy to azure
       # - name: Deploy to Azure Web App
       #   uses: azure/webapps-deploy@v2
